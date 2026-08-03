@@ -1,0 +1,357 @@
+<title>SFMS Build Roadmap</title>
+<style>
+  :root {
+    --ground: #f5f8f2;
+    --panel: #ffffff;
+    --panel-2: #eef3e9;
+    --ink: #16241b;
+    --ink-soft: #4c5c50;
+    --ink-faint: #74836f;
+    --line: #dde5d6;
+    --brand: #2f7d4f;
+    --brand-deep: #1f5c39;
+    --done: #2f7d4f;
+    --active: #b4790a;
+    --pending: #8a978a;
+    --spec: #7a4bd0;
+    --shadow: 0 1px 2px rgba(20,40,25,.06), 0 8px 24px rgba(20,40,25,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0e1611;
+      --panel: #16211b;
+      --panel-2: #1c2a22;
+      --ink: #e8f0e6;
+      --ink-soft: #a9b8ad;
+      --ink-faint: #7c8c80;
+      --line: #26362c;
+      --brand: #62c98a;
+      --brand-deep: #8fe0ac;
+      --done: #62c98a;
+      --active: #e0ad4e;
+      --pending: #7c8c80;
+      --spec: #b79af0;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f5f8f2; --panel: #ffffff; --panel-2: #eef3e9;
+    --ink: #16241b; --ink-soft: #4c5c50; --ink-faint: #74836f; --line: #dde5d6;
+    --brand: #2f7d4f; --brand-deep: #1f5c39; --done: #2f7d4f; --active: #b4790a;
+    --pending: #8a978a; --spec: #7a4bd0;
+    --shadow: 0 1px 2px rgba(20,40,25,.06), 0 8px 24px rgba(20,40,25,.05);
+  }
+  :root[data-theme="dark"] {
+    --ground: #0e1611; --panel: #16211b; --panel-2: #1c2a22;
+    --ink: #e8f0e6; --ink-soft: #a9b8ad; --ink-faint: #7c8c80; --line: #26362c;
+    --brand: #62c98a; --brand-deep: #8fe0ac; --done: #62c98a; --active: #e0ad4e;
+    --pending: #7c8c80; --spec: #b79af0;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  .display { font-family: ui-serif, Georgia, "Times New Roman", serif; }
+
+  /* Header */
+  header { margin-bottom: 36px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--brand); font-weight: 600; margin: 0 0 10px;
+  }
+  h1 {
+    font-family: ui-serif, Georgia, serif;
+    font-weight: 600; font-size: clamp(30px, 5vw, 44px);
+    line-height: 1.05; margin: 0 0 12px; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .lede { color: var(--ink-soft); font-size: 17px; max-width: 60ch; margin: 0; }
+
+  /* Progress meter */
+  .meter { margin: 26px 0 8px; }
+  .meter-top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: var(--ink-faint); margin-bottom: 8px;
+  }
+  .meter-top strong { color: var(--ink); font-size: 14px; }
+  .track {
+    height: 10px; border-radius: 999px; background: var(--panel-2);
+    overflow: hidden; display: flex; gap: 2px;
+  }
+  .seg { flex: 1; background: transparent; position: relative; }
+  .seg.done { background: var(--done); }
+  .seg.active {
+    background: repeating-linear-gradient(45deg, var(--active), var(--active) 5px, transparent 5px, transparent 10px);
+    background-color: color-mix(in srgb, var(--active) 28%, transparent);
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px;
+    font-size: 12.5px; color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot.done { background: var(--done); }
+  .dot.active { background: var(--active); }
+  .dot.pending { background: var(--pending); }
+
+  /* Phase card */
+  .phase {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px 22px 26px;
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .phase::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--pending);
+  }
+  .phase.done::before { background: var(--done); }
+  .phase.active::before { background: var(--active); }
+  .phase.active { border-color: color-mix(in srgb, var(--active) 45%, var(--line)); }
+
+  .phead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .badge {
+    font-family: ui-serif, Georgia, serif;
+    width: 40px; height: 40px; flex: none;
+    display: grid; place-items: center;
+    border-radius: 11px; font-size: 20px; font-weight: 600;
+    background: var(--panel-2); color: var(--brand);
+  }
+  .phase.done .badge { background: color-mix(in srgb, var(--done) 15%, var(--panel)); color: var(--done); }
+  .phase.active .badge { background: color-mix(in srgb, var(--active) 16%, var(--panel)); color: var(--active); }
+  .ptitles { flex: 1; min-width: 200px; }
+  .ptitle { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: -.01em; }
+  .pgoal { font-size: 13.5px; color: var(--ink-faint); margin: 2px 0 0; }
+
+  .status {
+    font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+  }
+  .status.done { background: color-mix(in srgb, var(--done) 16%, transparent); color: var(--done); }
+  .status.active { background: color-mix(in srgb, var(--active) 18%, transparent); color: var(--active); }
+  .status.pending { background: var(--panel-2); color: var(--ink-faint); }
+
+  .items { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 9px; }
+  .items li {
+    display: flex; align-items: flex-start; gap: 11px;
+    font-size: 14.5px; color: var(--ink-soft);
+  }
+  .items li .mk {
+    flex: none; margin-top: 1px; font-size: 13px; width: 18px; height: 18px;
+    display: grid; place-items: center; border-radius: 5px; font-weight: 700;
+  }
+  .mk.on { background: color-mix(in srgb, var(--done) 18%, transparent); color: var(--done); }
+  .mk.next { background: color-mix(in srgb, var(--active) 20%, transparent); color: var(--active); }
+  .mk.todo { background: var(--panel-2); color: var(--ink-faint); }
+  .items li b { color: var(--ink); font-weight: 600; }
+  .tag {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 1px 6px;
+    border-radius: 4px; margin-left: 6px; vertical-align: 1px;
+    background: color-mix(in srgb, var(--spec) 16%, transparent); color: var(--spec);
+  }
+  .tag.schema { background: color-mix(in srgb, var(--active) 16%, transparent); color: var(--active); }
+
+  .note {
+    margin-top: 40px; padding: 18px 20px; border-radius: 14px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    font-size: 13.5px; color: var(--ink-soft);
+  }
+  .note b { color: var(--ink); }
+  footer { margin-top: 28px; font-size: 12.5px; color: var(--ink-faint); text-align: center; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Smart Farm Management System · Flutter + Supabase</p>
+    <h1>Build roadmap — what's done and what's ahead</h1>
+    <p class="lede">Eight phases from a compiling app to a store release. You're
+      through the foundation and core tracking; the operational modules are underway.</p>
+
+    <div class="meter">
+      <div class="meter-top">
+        <span><strong>2.1</strong> of 8 phases complete</span>
+        <span>Phase C in progress</span>
+      </div>
+      <div class="track" role="img" aria-label="2 of 8 phases done, phase 3 in progress">
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg active"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+        <div class="seg"></div>
+      </div>
+      <div class="legend">
+        <span><i class="dot done"></i> Done</span>
+        <span><i class="dot active"></i> In progress</span>
+        <span><i class="dot pending"></i> Not started</span>
+        <span><i class="tag" style="margin:0">⭐ spec-critical</i></span>
+        <span><i class="tag schema" style="margin:0">needs new DB tables</i></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- A -->
+  <section class="phase done">
+    <div class="phead">
+      <div class="badge">A</div>
+      <div class="ptitles">
+        <p class="ptitle">Compile &amp; run</p>
+        <p class="pgoal">Done when: the app launches, you can register / log in, and the core screens render.</p>
+      </div>
+      <span class="status done">Done</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk on">✓</span><span>Native folders generated, dependencies resolved, <b>flutter analyze</b> clean</span></li>
+      <li><span class="mk on">✓</span><span>Boots without runtime errors (verified in Chrome); Android device run pending your hardware</span></li>
+    </ul>
+  </section>
+
+  <!-- B -->
+  <section class="phase done">
+    <div class="phead">
+      <div class="badge">B</div>
+      <div class="ptitles">
+        <p class="ptitle">Core data screens — turn tracking into real data</p>
+        <p class="pgoal">Done when: a farmer logs a real expense / harvest / sale and the Dashboard numbers reflect it.</p>
+      </div>
+      <span class="status done">Done</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk on">✓</span><span><b>Add Expense</b> — categories, amount, supplier, receipt photo → Storage</span></li>
+      <li><span class="mk on">✓</span><span><b>Add Harvest</b> and <b>Record Sale</b> (live running total)</span></li>
+      <li><span class="mk on">✓</span><span><b>Live Dashboard</b> — real revenue / expenses / profit, active crops, recent activity</span></li>
+      <li><span class="mk on">✓</span><span><b>Crops &amp; Plots</b> management per farm</span></li>
+      <li><span class="mk on">✓</span><span><b>Records history</b> + full <b>edit &amp; delete</b> for farm, plot, crop, expense, harvest, sale</span></li>
+    </ul>
+  </section>
+
+  <!-- C -->
+  <section class="phase active">
+    <div class="phead">
+      <div class="badge">C</div>
+      <div class="ptitles">
+        <p class="ptitle">Operational modules</p>
+        <p class="pgoal">Done when: every module in the spec persists and lists its data on device.</p>
+      </div>
+      <span class="status active">In progress</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk on">✓</span><span><b>Inventory</b> — stock list with low-stock &amp; expiry alerts, full CRUD</span></li>
+      <li><span class="mk next">→</span><span><b>Tasks</b> — assign, schedule, complete <em>(up next)</em></span></li>
+      <li><span class="mk todo">·</span><span><b>Workers</b> — roster, roles, attendance / pay</span></li>
+      <li><span class="mk todo">·</span><span><b>Equipment</b><span class="tag schema">schema</span></span></li>
+      <li><span class="mk todo">·</span><span><b>Water</b> — irrigation logs<span class="tag schema">schema</span></span></li>
+      <li><span class="mk todo">·</span><span><b>Nursery</b> — seedling batches<span class="tag schema">schema</span></span></li>
+      <li><span class="mk todo">·</span><span><b>Livestock</b><span class="tag schema">schema</span></span></li>
+      <li><span class="mk todo">·</span><span><b>Pest &amp; Disease</b> log<span class="tag schema">schema</span></span></li>
+      <li><span class="mk todo">·</span><span><b>Farm Map</b> — plot boundaries / geolocation<span class="tag schema">schema</span></span></li>
+    </ul>
+  </section>
+
+  <!-- D -->
+  <section class="phase">
+    <div class="phead">
+      <div class="badge">D</div>
+      <div class="ptitles">
+        <p class="ptitle">Offline-first sync <span class="tag" style="margin-left:2px">⭐ spec-critical</span></p>
+        <p class="pgoal">Done when: you can record expenses / harvests fully offline and they reconcile when back online.</p>
+      </div>
+      <span class="status pending">Not started</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk todo">·</span><span>Local database (Drift / Isar) as the source of truth</span></li>
+      <li><span class="mk todo">·</span><span>Queue writes while offline</span></li>
+      <li><span class="mk todo">·</span><span>Auto-sync to Supabase on reconnect, with conflict handling</span></li>
+    </ul>
+  </section>
+
+  <!-- E -->
+  <section class="phase">
+    <div class="phead">
+      <div class="badge">E</div>
+      <div class="ptitles">
+        <p class="ptitle">AI features</p>
+        <p class="pgoal">Done when: a plant photo returns a diagnosis and the assistant answers a Somali / English question.</p>
+      </div>
+      <span class="status pending">Not started</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk todo">·</span><span><b>AI Plant Doctor</b> — camera → vision model → structured diagnosis + treatment, expert fallback</span></li>
+      <li><span class="mk todo">·</span><span><b>AI Farm Assistant</b> — bilingual chat, aware of your farm data</span></li>
+      <li><span class="mk todo">·</span><span><b>AI Insights</b> — background alerts; seed the Somali knowledge base</span></li>
+    </ul>
+  </section>
+
+  <!-- F -->
+  <section class="phase">
+    <div class="phead">
+      <div class="badge">F</div>
+      <div class="ptitles">
+        <p class="ptitle">Reports, Community, Weather &amp; Notifications</p>
+        <p class="pgoal">Done when: reports export, community posts work, and a reminder fires as a push.</p>
+      </div>
+      <span class="status pending">Not started</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk todo">·</span><span><b>Reports / analytics</b> — charts, PDF / Excel export</span></li>
+      <li><span class="mk todo">·</span><span><b>Community feed</b> — connect with farmers &amp; experts</span></li>
+      <li><span class="mk todo">·</span><span><b>Live weather</b> + alerts</span></li>
+      <li><span class="mk todo">·</span><span><b>Push notifications</b> (FCM) — reminders, inventory &amp; payment alerts</span></li>
+    </ul>
+  </section>
+
+  <!-- G -->
+  <section class="phase">
+    <div class="phead">
+      <div class="badge">G</div>
+      <div class="ptitles">
+        <p class="ptitle">Localization &amp; quality hardening</p>
+        <p class="pgoal">Done when: both languages complete and tests are green.</p>
+      </div>
+      <span class="status pending">Not started</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk todo">·</span><span>Full <b>Somali / English</b> internationalization</span></li>
+      <li><span class="mk todo">·</span><span>Accessibility — sunlight contrast, large touch targets</span></li>
+      <li><span class="mk todo">·</span><span>Tests, error monitoring, performance</span></li>
+    </ul>
+  </section>
+
+  <!-- H -->
+  <section class="phase">
+    <div class="phead">
+      <div class="badge">H</div>
+      <div class="ptitles">
+        <p class="ptitle">Release</p>
+        <p class="pgoal">Done when: the app is installable from the store(s).</p>
+      </div>
+      <span class="status pending">Not started</span>
+    </div>
+    <ul class="items">
+      <li><span class="mk todo">·</span><span>App icons / splash, signing</span></li>
+      <li><span class="mk todo">·</span><span>Play Store build (+ App Store on macOS)</span></li>
+      <li><span class="mk todo">·</span><span>Supabase production hardening &amp; backups</span></li>
+    </ul>
+  </section>
+
+  <div class="note">
+    <b>Out of scope for this version:</b> the web dashboard (removed — mobile only), and
+    the Phase-2 spec extras (marketplace, IoT sensors, drones) — revisit later.
+  </div>
+
+  <footer>Backend live on Supabase · reused unchanged across every phase</footer>
+</div>

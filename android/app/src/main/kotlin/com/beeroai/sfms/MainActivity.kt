@@ -1,0 +1,5 @@
+package com.beeroai.sfms
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

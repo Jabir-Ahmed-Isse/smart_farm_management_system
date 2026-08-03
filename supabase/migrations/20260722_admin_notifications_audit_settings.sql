@@ -1,0 +1,7 @@
+-- Admin dashboard: Notifications (broadcasts), Audit Logs, System Settings.
+-- All reads/writes go through is_admin()-gated SECURITY DEFINER RPCs.
+-- (Applied via MCP 2026-07-22; this file mirrors it.)
+-- audit_logs (+ log_audit helper, audit_profile_changes trigger, admin_list_audit_logs),
+-- admin_broadcasts (+ admin_create/list/delete_broadcast),
+-- system_settings (+ seed, admin_list_settings, admin_set_setting).
+-- See git / the Supabase migration of the same name for the full body.
