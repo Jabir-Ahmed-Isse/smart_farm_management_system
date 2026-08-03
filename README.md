@@ -19,6 +19,16 @@ backend it talks to is already live.
 | Live data on Dashboard financials & crops | ⏳ Phase 3 |
 | Offline-first sync | ⏳ Phase 4 |
 
+## Screenshots
+
+| Login | Dashboard | Farm Management |
+|---|---|---|
+| <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.23%20PM.jpeg" alt="Somali Farm login screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM%20(2).jpeg" alt="Farm dashboard with financial summary" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM%20(1).jpeg" alt="Farm management screen" width="220" /> |
+
+| AI Plant Doctor | Community | Account & Admin |
+|---|---|---|
+| <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM.jpeg" alt="AI Plant Doctor scan screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM%20(1).jpeg" alt="Farmer community screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM.jpeg" alt="Account and administration screen" width="220" /> |
+
 ## Requirements
 
 - **Flutter SDK ≥ 3.27** (stable channel) with Dart ≥ 3.6 — https://docs.flutter.dev/get-started/install
