@@ -32,3 +32,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local-only docs (kept off GitHub)
+DEMO_RUNBOOK.md
+*.ppt
+*.pptx
+docs/*.md
