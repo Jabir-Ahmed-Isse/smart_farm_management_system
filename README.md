@@ -134,7 +134,7 @@ The Gemini API key is kept on the server as a Supabase Edge Function secret; it 
 
 ## Author
 
-**Engineer Mire**
+**Jabir Ahmed Isse**
 Software Engineer · Flutter Developer · Full Stack Developer · AI Product Engineer
 
 ## License
