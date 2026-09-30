@@ -51,6 +51,10 @@ The crop journey provides a chronological story for each crop, connecting planti
 |---|---|---|
 | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM.jpeg" alt="AI Plant Doctor scan screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM%20(1).jpeg" alt="Farmer community screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM.jpeg" alt="Account and administration screen" width="220" /> |
 
+| Sign In (Somali) | Create Account | Reset Password |
+|---|---|---|
+| <img src="screenshots/app/login.png" alt="Somali-language sign in screen" width="220" /> | <img src="screenshots/app/register.png" alt="Create account screen" width="220" /> | <img src="screenshots/app/forgot-password.png" alt="Reset password screen" width="220" /> |
+
 ## Architecture
 
 ```text
