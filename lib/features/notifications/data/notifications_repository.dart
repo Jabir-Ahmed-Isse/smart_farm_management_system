@@ -5,6 +5,7 @@ import '../../../core/offline/local_store.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../admin/data/admin_system_repository.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../weather/data/weather_alerts_repository.dart';
 
 /// Farmer-facing view of admin broadcasts. The `broadcasts read active` RLS
 /// policy lets any authenticated user read active rows; audience targeting
@@ -68,11 +69,21 @@ final myNotificationsProvider = FutureProvider<List<Broadcast>>((ref) {
   return ref.watch(notificationsRepositoryProvider).inbox();
 });
 
-/// Count of announcements newer than the user's last visit — drives the badge.
+/// Count of announcements + weather alerts newer than the user's last visit —
+/// drives the dashboard bell badge.
 final unreadNotificationsProvider = FutureProvider<int>((ref) async {
   final repo = ref.watch(notificationsRepositoryProvider);
   final list = await ref.watch(myNotificationsProvider.future);
+  // Weather alerts are best-effort — never let them break the badge.
+  List<WeatherAlertRecord> alerts;
+  try {
+    alerts = await ref.watch(myWeatherAlertsProvider.future);
+  } catch (_) {
+    alerts = const [];
+  }
   final seen = repo.lastSeen();
-  if (seen == null) return list.length;
-  return list.where((b) => b.createdAt.isAfter(seen)).length;
+  if (seen == null) return list.length + alerts.length;
+  final b = list.where((x) => x.createdAt.isAfter(seen)).length;
+  final w = alerts.where((x) => x.createdAt.isAfter(seen)).length;
+  return b + w;
 });

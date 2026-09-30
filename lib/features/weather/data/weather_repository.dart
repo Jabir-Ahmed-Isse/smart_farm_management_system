@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
@@ -22,6 +23,7 @@ class WeatherRepository {
 
   static const _cacheBox = 'sfms_weather';
   static const _endpoint = 'https://api.open-meteo.com/v1/forecast';
+  static const _floodEndpoint = 'https://flood-api.open-meteo.com/v1/flood';
 
   Future<WeatherReport> getWeather(double lat, double lng) async {
     final uri = Uri.parse(_endpoint).replace(queryParameters: {
@@ -36,13 +38,26 @@ class WeatherRepository {
       'wind_speed_unit': 'kmh',
     });
 
+    // Kick off the river-flood check concurrently; it's best-effort and never
+    // throws, so it can't break the main forecast.
+    final floodFuture = _floodWatch(lat, lng);
+
     try {
       final res =
           await http.get(uri).timeout(const Duration(seconds: 12));
       if (res.statusCode != 200) {
         throw Exception('Weather service returned ${res.statusCode}');
       }
-      final report = _parse(jsonDecode(res.body) as Map<String, dynamic>);
+      var report = _parse(jsonDecode(res.body) as Map<String, dynamic>);
+      final flood = await floodFuture;
+      if (flood != null) {
+        report = WeatherReport(
+          current: report.current,
+          daily: report.daily,
+          alerts: [flood, ...report.alerts],
+          fetchedAt: report.fetchedAt,
+        );
+      }
       await _cache(lat, lng, report);
       return report;
     } catch (_) {
@@ -50,6 +65,46 @@ class WeatherRepository {
       final cached = await _readCache(lat, lng);
       if (cached != null) return cached;
       rethrow;
+    }
+  }
+
+  /// Best-effort river-flood signal from Open-Meteo's Flood API (GloFAS river
+  /// discharge). Only meaningful where a modelled river runs near the farm —
+  /// returns null otherwise. Never throws: it must not break the forecast.
+  Future<WeatherAlert?> _floodWatch(double lat, double lng) async {
+    try {
+      final uri = Uri.parse(_floodEndpoint).replace(queryParameters: {
+        'latitude': lat.toStringAsFixed(4),
+        'longitude': lng.toStringAsFixed(4),
+        'daily': 'river_discharge',
+        'forecast_days': '7',
+      });
+      final res = await http.get(uri).timeout(const Duration(seconds: 10));
+      if (res.statusCode != 200) return null;
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      final daily = json['daily'] as Map<String, dynamic>?;
+      final series = (daily?['river_discharge'] as List?)
+          ?.map((e) => (e as num?)?.toDouble())
+          .whereType<double>()
+          .toList();
+      if (series == null || series.length < 2) return null;
+      final baseline = series.first;
+      final peak = series.reduce((a, b) => a > b ? a : b);
+      // Ignore points with no real river nearby; only flag a sharp, real rise.
+      if (baseline <= 0.5) return null;
+      if (peak >= baseline * 1.8 && (peak - baseline) >= 2) {
+        return const WeatherAlert(
+          severity: AlertSeverity.danger,
+          title: 'River levels rising',
+          message: 'Rivers near your farm are forecast to swell sharply over '
+              'the coming days. Watch low-lying plots for flooding and move '
+              'animals and stored produce to higher ground.',
+          icon: Symbols.tsunami,
+        );
+      }
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 

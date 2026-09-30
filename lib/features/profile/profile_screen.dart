@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/auth/roles.dart';
+import '../../core/errors.dart';
 import '../../core/l10n/l10n.dart';
+import '../../core/offline/local_store.dart';
 import '../../core/supabase/supabase_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -472,13 +474,18 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             phone: _phoneCtrl.text,
             language: _language,
           );
+      // Keep the local UI-language override in step with the saved choice so
+      // the two edit paths never disagree.
+      ref.read(languageOverrideProvider.notifier).state =
+          _language == 'en' ? AppLang.en : AppLang.so;
+      await LocalStore.instance.metaPut(kUiLanguageKey, _language);
       ref.invalidate(myProfileProvider);
       nav.pop();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = 'Could not save your profile.';
+          _error = 'Could not save your profile: ${friendlyError(e)}';
         });
       }
     }
@@ -502,25 +509,23 @@ class _LanguageSheetState extends ConsumerState<_LanguageSheet> {
     if (_saving) return;
     setState(() => _saving = true);
     final nav = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    // Switch the UI immediately, before the network round-trip.
+    // Language is a local UI preference — apply and persist it on-device right
+    // away so the switch always works, even offline or if the profile sync
+    // below fails. This is the source of truth for the UI.
     ref.read(languageOverrideProvider.notifier).state =
         code == 'en' ? AppLang.en : AppLang.so;
+    await LocalStore.instance.metaPut(kUiLanguageKey, code);
+    // Best-effort: mirror the choice to the profile so it follows the user
+    // across devices. Failures are non-blocking and silent — the local switch
+    // already succeeded, so no alert is shown either way.
     try {
-      await ref
-          .read(profileRepositoryProvider)
-          .updateMyProfile(language: code);
+      await ref.read(profileRepositoryProvider).updateMyProfile(language: code);
       ref.invalidate(myProfileProvider);
-      nav.pop();
-      messenger.showSnackBar(
-          SnackBar(content: Text('Language set to ${_languageLabel(code)}.')));
     } catch (_) {
-      if (mounted) {
-        setState(() => _saving = false);
-        messenger.showSnackBar(const SnackBar(
-            content: Text('Could not change the language.')));
-      }
+      // Ignore: language is saved on-device regardless of the sync result.
     }
+    if (!mounted) return;
+    nav.pop();
   }
 
   @override

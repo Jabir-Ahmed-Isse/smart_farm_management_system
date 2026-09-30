@@ -1,14 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/profile/data/profile_repository.dart';
+import '../offline/local_store.dart';
 import 'app_strings.dart';
 
 export 'app_strings.dart';
 
-/// An in-session language override, set the instant the user picks a language so
-/// the UI switches without waiting for the profile round-trip. Null = follow the
-/// saved profile preference.
-final languageOverrideProvider = StateProvider<AppLang?>((ref) => null);
+/// Device-local key holding the user's chosen UI language ('en' | 'so').
+const kUiLanguageKey = 'ui:language';
+
+/// The user's chosen UI language, applied the instant they pick one and
+/// persisted on-device so it survives restarts and never depends on a network
+/// round-trip. Seeded from local storage at startup. Null = follow the saved
+/// profile preference.
+final languageOverrideProvider = StateProvider<AppLang?>((ref) {
+  if (!LocalStore.isReady) return null;
+  final saved = LocalStore.instance.metaGet(kUiLanguageKey);
+  if (saved == 'en') return AppLang.en;
+  if (saved == 'so') return AppLang.so;
+  return null;
+});
 
 /// The language the UI should render in: the override if set, otherwise the
 /// signed-in profile's `language` (defaulting to Somali for this audience).

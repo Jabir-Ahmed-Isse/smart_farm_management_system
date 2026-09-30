@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/util/time_ago.dart';
 import '../../admin/data/admin_system_repository.dart';
+import '../../weather/data/weather_alerts_repository.dart';
 import '../data/notifications_repository.dart';
 
 /// Farmer-facing announcements inbox. Opening it marks everything seen, which
@@ -33,46 +34,147 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     });
   }
 
+  bool _isNew(DateTime t) => _lastSeen == null || t.isAfter(_lastSeen!);
+
   @override
   Widget build(BuildContext context) {
     final inbox = ref.watch(myNotificationsProvider);
+    final weather = ref.watch(myWeatherAlertsProvider);
+
+    final broadcasts = inbox.valueOrNull ?? const <Broadcast>[];
+    // Weather alerts are best-effort: an error (e.g. table not migrated yet) is
+    // treated as "none" so the inbox never breaks.
+    final alerts = weather.valueOrNull ?? const <WeatherAlertRecord>[];
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Announcements'),
+        title: const Text('Notifications'),
         backgroundColor: AppColors.background,
       ),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(myNotificationsProvider),
-        child: inbox.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => ListView(children: [
-            const SizedBox(height: 120),
-            Center(child: Text('Could not load announcements',
-                style: AppText.headlineSm)),
-          ]),
-          data: (list) {
-            if (list.isEmpty) {
-              return ListView(children: [
-                const SizedBox(height: 140),
-                const Icon(Symbols.notifications_off,
-                    size: 56, color: AppColors.outline),
-                const SizedBox(height: 12),
-                Center(
-                    child: Text('No announcements yet', style: AppText.headlineSm)),
-              ]);
+        onRefresh: () async {
+          ref.invalidate(myNotificationsProvider);
+          ref.invalidate(myWeatherAlertsProvider);
+        },
+        child: Builder(builder: (_) {
+          final children = <Widget>[];
+
+          if (alerts.isNotEmpty) {
+            children.add(const _SectionLabel('Weather alerts'));
+            for (final a in alerts) {
+              children.add(Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _WeatherAlertCard(alert: a, isNew: _isNew(a.createdAt)),
+              ));
             }
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: list.length,
-              itemBuilder: (_, i) => _Card(
-                b: list[i],
-                isNew: _lastSeen == null || list[i].createdAt.isAfter(_lastSeen!),
+          }
+
+          if (broadcasts.isNotEmpty) {
+            if (children.isNotEmpty) children.add(const SizedBox(height: 8));
+            children.add(const _SectionLabel('Announcements'));
+            for (final b in broadcasts) {
+              children.add(Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _Card(b: b, isNew: _isNew(b.createdAt)),
+              ));
+            }
+          }
+
+          if (children.isEmpty) {
+            if (inbox.isLoading || weather.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return ListView(children: [
+              const SizedBox(height: 140),
+              const Icon(Symbols.notifications_off,
+                  size: 56, color: AppColors.outline),
+              const SizedBox(height: 12),
+              Center(
+                  child: Text('Nothing here yet', style: AppText.headlineSm)),
+            ]);
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: children,
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(text.toUpperCase(),
+          style: AppText.labelSm.copyWith(
+              color: AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6)),
+    );
+  }
+}
+
+class _WeatherAlertCard extends StatelessWidget {
+  const _WeatherAlertCard({required this.alert, required this.isNew});
+  final WeatherAlertRecord alert;
+  final bool isNew;
+
+  static const _icons = <String, IconData>{
+    'flood': Symbols.flood,
+    'river_flood': Symbols.tsunami,
+    'heavy_rain': Symbols.rainy_heavy,
+    'heat': Symbols.thermometer,
+    'wind': Symbols.air,
+    'dry': Symbols.water_drop,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final colour = alert.isDanger ? AppColors.error : AppColors.tertiary;
+    final icon = _icons[alert.hazard] ?? Symbols.warning;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colour.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colour.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, size: 20, color: colour),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(alert.title,
+                    style: AppText.labelMd
+                        .copyWith(color: colour, fontWeight: FontWeight.w800))),
+            if (isNew)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                    color: colour, borderRadius: BorderRadius.circular(20)),
+                child: Text('New',
+                    style:
+                        AppText.labelSm.copyWith(color: AppColors.onPrimary)),
               ),
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-            );
-          },
-        ),
+          ]),
+          const SizedBox(height: 8),
+          Text(alert.body, style: AppText.bodyMd),
+          const SizedBox(height: 8),
+          Text(timeAgo(alert.createdAt),
+              style:
+                  AppText.labelSm.copyWith(color: AppColors.onSurfaceVariant)),
+        ],
       ),
     );
   }

@@ -214,6 +214,24 @@ class WeatherReport {
     final today = daily.isNotEmpty ? daily.first : null;
     final soon = daily.take(3).toList();
 
+    // Flooding — heavy multi-day rain is the main flash-flood driver in the
+    // Shabelle and Juba basins, so this leads as the most serious advisory.
+    final rain3 = soon.fold<double>(0, (s, d) => s + d.precipitationSum);
+    final peakDay = soon.isEmpty
+        ? 0.0
+        : soon.map((d) => d.precipitationSum).reduce((a, b) => a > b ? a : b);
+    final floodRisk = rain3 >= 50 || peakDay >= 45;
+    if (floodRisk) {
+      alerts.add(WeatherAlert(
+        severity: AlertSeverity.danger,
+        title: 'Flood risk',
+        message: 'Heavy rain (about ${rain3.round()} mm over 3 days) could '
+            'cause flooding. Move stored produce and animals to higher ground, '
+            'clear drainage channels, and stay off low-lying plots.',
+        icon: Symbols.flood,
+      ));
+    }
+
     // Extreme heat — plan field work and irrigation around it.
     final heat = [
       current.apparentTemperature,
@@ -237,11 +255,12 @@ class WeatherReport {
       ));
     }
 
-    // Heavy rain in the next few days — hold off spraying/fertilising.
+    // Heavy rain in the next few days — hold off spraying/fertilising. Skipped
+    // when a flood alert already covers the same rain, to avoid two cards.
     final wetDay = soon
         .where((d) => d.precipitationSum >= 20 || d.precipitationProbability >= 70)
         .toList();
-    if (wetDay.isNotEmpty) {
+    if (!floodRisk && wetDay.isNotEmpty) {
       final d = wetDay.first;
       alerts.add(WeatherAlert(
         severity: AlertSeverity.warning,

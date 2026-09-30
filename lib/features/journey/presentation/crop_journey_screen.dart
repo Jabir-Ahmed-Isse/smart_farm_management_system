@@ -75,8 +75,27 @@ class _CropJourneyScreenState extends ConsumerState<CropJourneyScreen> {
         ),
         _filterChips(),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text('Journey Timeline', style: AppText.headlineSm),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+          child: Row(
+            children: [
+              const Icon(Symbols.timeline, size: 20, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Journey Timeline', style: AppText.headlineSm),
+              const Spacer(),
+              if (events.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text('${events.length}',
+                      style: AppText.labelSm
+                          .copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+                ),
+            ],
+          ),
         ),
         if (events.isEmpty)
           Padding(
@@ -104,13 +123,20 @@ class _CropJourneyScreenState extends ConsumerState<CropJourneyScreen> {
   }
 
   Widget _infoGrid(CropJourney j) {
-    final cards = <(IconData, String, String)>[
-      (Symbols.event, 'Days Planted',
-          j.daysPlanted == null ? '—' : '${j.daysPlanted}d'),
-      (Symbols.eco, 'Stage', _cap(j.stage)),
-      (Symbols.calendar_month, 'Est. Harvest',
-          j.expectedHarvest == null ? '—' : _dayFmt.format(j.expectedHarvest!)),
-      (Symbols.payments, 'Est. Profit', formatMoney(j.netProfit)),
+    final profitOk = j.netProfit >= 0;
+    final cards = <_StatData>[
+      _StatData(Symbols.event, 'Days Planted',
+          j.daysPlanted == null ? '—' : '${j.daysPlanted}d',
+          const Color(0xFF2E7D32), const Color(0xFFE7F3E8)),
+      _StatData(Symbols.eco, 'Stage', _cap(j.stage),
+          const Color(0xFF00796B), const Color(0xFFE0F2F1)),
+      _StatData(Symbols.calendar_month, 'Est. Harvest',
+          j.expectedHarvest == null ? '—' : _dayFmt.format(j.expectedHarvest!),
+          const Color(0xFFE65100), const Color(0xFFFFF1E3)),
+      _StatData(Symbols.payments, 'Est. Profit', formatMoney(j.netProfit),
+          profitOk ? const Color(0xFF1B5E20) : AppColors.error,
+          profitOk ? const Color(0xFFE7F3E8) : const Color(0xFFFFEAE7),
+          valueColor: profitOk ? const Color(0xFF1B5E20) : AppColors.error),
     ];
     return GridView.count(
       crossAxisCount: 2,
@@ -118,41 +144,8 @@ class _CropJourneyScreenState extends ConsumerState<CropJourneyScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 2.4,
-      children: [
-        for (final c in cards)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(children: [
-                  Icon(c.$1, size: 16, color: AppColors.primary),
-                  const SizedBox(width: 6),
-                  Text(c.$2,
-                      style: AppText.labelSm
-                          .copyWith(color: AppColors.onSurfaceVariant)),
-                ]),
-                const SizedBox(height: 6),
-                Text(c.$3,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.headlineSm.copyWith(
-                        color: c.$2 == 'Est. Profit'
-                            ? (j.netProfit >= 0
-                                ? AppColors.primary
-                                : AppColors.error)
-                            : AppColors.onSurface)),
-              ],
-            ),
-          ),
-      ],
+      childAspectRatio: 2.05,
+      children: [for (final c in cards) _StatCard(data: c)],
     );
   }
 
@@ -199,31 +192,46 @@ class _CropJourneyScreenState extends ConsumerState<CropJourneyScreen> {
   }
 
   Widget _footer(CropJourney j) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : () => _run(() => CropJourneyExport.savePdf(j), 'PDF exported'),
-                icon: const Icon(Symbols.picture_as_pdf, size: 18),
-                label: const Text('Export PDF'),
-                style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        border: Border(
+            top: BorderSide(
+                color: AppColors.outlineVariant.withValues(alpha: 0.6))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () =>
+                          _run(() => CropJourneyExport.savePdf(j), 'PDF exported'),
+                  icon: const Icon(Symbols.picture_as_pdf, size: 18),
+                  label: const Text('Export PDF'),
+                  style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48)),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _busy ? null : () => _run(() => CropJourneyExport.saveText(j), 'Timeline exported'),
-                icon: const Icon(Symbols.share, size: 18),
-                label: const Text('Share Timeline'),
-                style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () => _run(() => CropJourneyExport.saveText(j),
+                          'Timeline exported'),
+                  icon: const Icon(Symbols.share, size: 18),
+                  label: const Text('Share Timeline'),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48)),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -244,6 +252,78 @@ class _CropJourneyScreenState extends ConsumerState<CropJourneyScreen> {
 
   static String _cap(String s) =>
       s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+}
+
+// ----------------------------------------------------------------- stat cards
+
+class _StatData {
+  const _StatData(this.icon, this.label, this.value, this.accent, this.tint,
+      {this.valueColor});
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color accent;
+  final Color tint;
+  final Color? valueColor;
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.data});
+  final _StatData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: data.tint,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(data.icon, size: 22, color: data.accent),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(data.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.labelSm
+                        .copyWith(color: AppColors.onSurfaceVariant)),
+                const SizedBox(height: 2),
+                Text(data.value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.headlineSm.copyWith(
+                        color: data.valueColor ?? AppColors.onSurface,
+                        fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // --------------------------------------------------------------------- hero
@@ -412,20 +492,40 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFE7F3E8),
+            AppColors.primaryContainer.withValues(alpha: 0.18),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(Symbols.psychiatry, size: 18, color: AppColors.primary),
-            const SizedBox(width: 8),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: const Icon(Symbols.auto_awesome,
+                  size: 17, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
             Text('AI Season Summary',
-                style: AppText.labelMd.copyWith(color: AppColors.primary)),
+                style: AppText.labelMd.copyWith(
+                    color: AppColors.primary, fontWeight: FontWeight.w700)),
           ]),
-          const SizedBox(height: 8),
-          Text(text, style: AppText.bodyMd),
+          const SizedBox(height: 10),
+          Text(text,
+              style: AppText.bodyMd
+                  .copyWith(height: 1.5, color: AppColors.onSurface)),
         ],
       ),
     );

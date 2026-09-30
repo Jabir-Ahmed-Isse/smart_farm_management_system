@@ -10,10 +10,12 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../models/crop.dart';
 import '../../models/farm.dart';
+import '../../models/weather.dart';
 import '../journey/presentation/crop_journey_screen.dart';
 import '../notifications/data/notifications_repository.dart';
 import '../profile/data/profile_repository.dart';
 import '../records/presentation/records_screen.dart';
+import '../weather/data/weather_repository.dart';
 import 'data/dashboard_repository.dart';
 
 /// Home dashboard — implements the Stitch "Farm Dashboard" design.
@@ -46,6 +48,7 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
               _Header(name: name, greeting: t.welcomeBack),
+              const _WeatherAlertBanner(),
               const SizedBox(height: 24),
               _FinancialCard(summary: summary),
               const SizedBox(height: 24),
@@ -76,6 +79,107 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               _RecentActivity(summary: summary),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Proactive weather warning surfaced on the home screen the moment the app
+/// opens — so a farmer sees a flood or heavy-rain danger without navigating to
+/// the Weather tab. Shows only serious advisories; taps through to full weather.
+class _WeatherAlertBanner extends ConsumerWidget {
+  const _WeatherAlertBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final farm = ref.watch(activeFarmProvider);
+    if (farm == null || !farm.hasLocation) return const SizedBox.shrink();
+
+    final coords = (lat: farm.latitude!, lng: farm.longitude!);
+    final report = ref.watch(weatherForFarmProvider(coords)).valueOrNull;
+    if (report == null) return const SizedBox.shrink();
+
+    // Only the serious stuff earns a spot on the home screen.
+    final urgent = report.alerts
+        .where((a) => a.severity != AlertSeverity.info)
+        .toList()
+      ..sort((a, b) => b.severity.index.compareTo(a.severity.index));
+    if (urgent.isEmpty) return const SizedBox.shrink();
+
+    final top = urgent.first;
+    final danger = top.severity == AlertSeverity.danger;
+    final colour = danger ? AppColors.error : AppColors.tertiary;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push('/weather'),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colour.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colour.withValues(alpha: 0.45)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: colour.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(top.icon, color: colour, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(top.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.labelMd.copyWith(
+                                    color: colour,
+                                    fontWeight: FontWeight.w800)),
+                          ),
+                          if (urgent.length > 1)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: colour.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text('+${urgent.length - 1}',
+                                  style: AppText.labelSm.copyWith(
+                                      color: colour,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(top.message,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.labelSm
+                              .copyWith(color: AppColors.onSurface)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Symbols.chevron_right, color: colour, size: 20),
+              ],
+            ),
           ),
         ),
       ),
