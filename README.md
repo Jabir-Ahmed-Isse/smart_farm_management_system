@@ -43,17 +43,25 @@ The crop journey provides a chronological story for each crop, connecting planti
 
 ## Screenshots
 
-| Login | Dashboard | Farm Management |
-|---|---|---|
-| <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.23%20PM.jpeg" alt="Somali Farm login screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM%20(2).jpeg" alt="Farm dashboard with financial summary" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM%20(1).jpeg" alt="Farm management screen" width="220" /> |
-
-| AI Plant Doctor | Community | Account & Admin |
-|---|---|---|
-| <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.24%20PM.jpeg" alt="AI Plant Doctor scan screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM%20(1).jpeg" alt="Farmer community screen" width="220" /> | <img src="screenshots/WhatsApp%20Image%202026-08-03%20at%205.53.25%20PM.jpeg" alt="Account and administration screen" width="220" /> |
-
 | Sign In (Somali) | Create Account | Reset Password |
 |---|---|---|
 | <img src="screenshots/app/login.png" alt="Somali-language sign in screen" width="220" /> | <img src="screenshots/app/register.png" alt="Create account screen" width="220" /> | <img src="screenshots/app/forgot-password.png" alt="Reset password screen" width="220" /> |
+
+| Dashboard | My Farms | Reports |
+|---|---|---|
+| <img src="screenshots/jabir/dashboard.png" alt="Dashboard with net profit, revenue and expenses" width="220" /> | <img src="screenshots/jabir/farms.png" alt="Farm list" width="220" /> | <img src="screenshots/jabir/reports.png" alt="Financial reports with charts" width="220" /> |
+
+| AI Plant Doctor | AI Assistant | Community |
+|---|---|---|
+| <img src="screenshots/jabir/ai-doctor.png" alt="AI Plant Doctor scan screen" width="220" /> | <img src="screenshots/jabir/assistant.png" alt="AI farm assistant chat" width="220" /> | <img src="screenshots/jabir/community.png" alt="Farmer community feed" width="220" /> |
+
+| Records | Add Expense | Notifications |
+|---|---|---|
+| <img src="screenshots/jabir/records.png" alt="Expense, harvest and sales records" width="220" /> | <img src="screenshots/jabir/add-expense.png" alt="Add expense form" width="220" /> | <img src="screenshots/jabir/notifications.png" alt="Notifications and announcements" width="220" /> |
+
+| Account | Plans & Upgrade |
+|---|---|
+| <img src="screenshots/jabir/profile.png" alt="Account screen for user Jabir" width="220" /> | <img src="screenshots/jabir/upgrade.png" alt="Subscription plans" width="220" /> |
 
 ## Architecture
 
