@@ -99,8 +99,8 @@ Google Gemini AI
 ### Install and run
 
 ```bash
-git clone https://github.com/apdiweli/smart-farm-management-system.git
-cd smart-farm-management-system
+git clone https://github.com/Jabir-Ahmed-Isse/smart_farm_management_system.git
+cd smart_farm_management_system
 flutter pub get
 flutter run
 ```
